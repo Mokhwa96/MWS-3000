@@ -1,0 +1,5 @@
+![main](https://github.com/Mokhwa96/MWS-3000/assets/149074033/03f9a025-d6eb-4945-9499-fd339dd215f6)
+![Initilizing](https://github.com/Mokhwa96/MWS-3000/assets/149074033/1f68f625-6522-4f64-8756-051c825c6ea6)
+![Parsing](https://github.com/Mokhwa96/MWS-3000/assets/149074033/b88b169e-51ea-4696-9948-5e7bf1317a1b)
+![remove_old](https://github.com/Mokhwa96/MWS-3000/assets/149074033/5af4ccd5-1264-44cf-903a-0d11699e7fbd)
+![Writing](https://github.com/Mokhwa96/MWS-3000/assets/149074033/2609e6d1-8423-463a-9c10-cc63db3f22ab)
