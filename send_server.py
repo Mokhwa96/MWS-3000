@@ -1,8 +1,9 @@
 import requests
+import pandas as pd
 from urllib.parse import urljoin
 
-SERVER, PORT = '00.000.000.000', 0000  # AWS
-DEV_ID = 'test'
+SERVER, PORT = '00', 00  # AWS
+DEV_ID = 'dev_03'
 BASE_URL = f'http://{SERVER}:{PORT}/api/'
 
 def receive_data():
@@ -21,4 +22,15 @@ def receive_data():
 if __name__ == '__main__':
     data = receive_data()
     if data:
+        data['timestamp'] = pd.to_datetime(data['timestamp'], unit='s').strftime('%Y-%m-%d %H:%M:%S')
+        # 바람 방향을 조정
+        adjusted_wd = (float(data["wd"]) - float(data["north_direction"]) + 360) % 360
+
+        # 바람 방향을 문자열로 변환
+        directions = ["북", "북서", "서", "남서", "남", "남동", "동", "북동"]
+        index = int(adjusted_wd / 45)
+        wd_kr = directions[index] if adjusted_wd % 45 < 22.5 else directions[(index + 1) % 8]
+
+        data["wd"] = wd_kr
+
         print(data)

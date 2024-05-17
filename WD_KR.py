@@ -1,28 +1,12 @@
 wd = 45  # 바람이 불어오는 방향의 각도
 nd = 227  # 북쪽 방향의 각도
-wd_kr = ""
 
-if wd < nd:
-    wd += 360  # wd가 nd보다 작을 경우, 360을 더하여 조정
+# 바람 방향을 조정
+adjusted_wd = (wd - nd + 360) % 360
 
-# 수정된 범위 조건
-if wd-nd >= 0 and wd-nd < 22.5:
-    wd_kr = "북"
-elif wd-nd < 67.5:
-    wd_kr = "북서"
-elif wd-nd < 112.5:
-    wd_kr = "서"
-elif wd-nd < 157.5:
-    wd_kr = "남서"
-elif wd-nd < 202.5:
-    wd_kr = "남"
-elif wd-nd < 247.5:
-    wd_kr = "남동"
-elif wd-nd < 292.5:
-    wd_kr = "동"
-elif wd-nd < 337.5:
-    wd_kr = "북동"
-else:
-    wd_kr = "북"  # 마지막 범위를 넘어선 경우 (360도에 가까운 경우)
+# 바람 방향을 문자열로 변환
+directions = ["북", "북서", "서", "남서", "남", "남동", "동", "북동"]
+index = int(adjusted_wd / 45)
+wd_kr = directions[index] if adjusted_wd % 45 < 22.5 else directions[(index + 1) % 8]
 
 print(wd_kr)
