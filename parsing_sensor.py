@@ -23,7 +23,7 @@ voltage_start, voltage_end = 36, 40
 
 DEV_ID = 'test'
 DATA_PATH = f'sensor_data/{DEV_ID}.csv'
-SERVER, PORT = '00.000.000.000', 0000 # AWS
+SERVER, PORT = '00', 00 # AWS
 url = f'http://{SERVER}:{PORT}/api/{DEV_ID}'
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 RSS_url = "https://www.weather.go.kr/w/rss/dfs/hr1-forecast.do?zone=4617043000"  # 기상청 RSS
@@ -55,9 +55,9 @@ def initialize():
             print('Sensor not Reachable')
             time.sleep(1)
             not_sensor_cnt += 1
-            if not_sensor_cnt >= 3:
-                print("No Sensor") # 센서가 연결이 안되었을 때
-                print(ip, "no result")
+            if not_sensor_cnt >= 3: # 3번 센서 연결 확인 
+                print("No Sensor Process") # 센서가 연결이 안되었을 때
+                print(ip, "No Sensor") #IP 주소만 출력
                 time.sleep(3)
                 break
     
@@ -66,7 +66,7 @@ def initialize():
         with open(DATA_PATH, mode='a') as f:
             f.writelines(f"{columns}\n")
     if not_sensor_cnt >= 3:
-        return "No result", ip
+        return "No Sensor", ip
     for _ in range(2): # ignore 2 old data
         try:
             _ = parse(device, ip) 
@@ -84,7 +84,7 @@ def parse(device, ip):
                 'temp': float(ret[temp_start:temp_end]),
                 'humidity': float(ret[humidity_start:humidity_end]),
                 'ws': float(ret[ws_start:ws_end]),
-                'wd': int(ret[wd_start:wd_end]),
+                'wd': str(ret[wd_start:wd_end]),
                 'north_direction': float(ret[north_direction_start:north_direction_end]),
                 'atmospheric_pressure': float(ret[atmospheric_pressure_start:atmospheric_pressure_end]),
                 'rainfall': float(ret[rainfall_start:rainfall_end]),
@@ -115,58 +115,79 @@ def remove_old(): # 라즈베리파이 내에서 오래된 데이터를 지움
             for line in lines:
                 f.writelines(line)
     return
-
+def GivemeWeather(): # 기상청에서 데이터르 불러오는 코드
+    # GET 요청 보내기
+            response = requests.get(RSS_url)
+            # 응답 상태 코드 확인
+            if response.status_code == 200:
+                try:
+                    # XML 파싱
+                    root = ET.fromstring(response.content)
+                # 각 item 요소를 순회하며 데이터 추출
+                    for item in root.findall('channel/item'):
+                        description = item.find('description').find('body').find('data')
+                        temp = description.find('temp').text # 현재 시간 온도
+                        pcp = description.find('pcp').text # 1시간 예상강수량
+                        ws = description.find('ws').text # 풍속(m/s)
+                        wdKor = description.find('wdKor').text # 풍향한국어 [동, 북, 북동, 북서, 남, 남동, 남서, 서]
+                        reh = description.find('reh').text #습도%
+                    data = {
+                    'timestamp': int(time.time()),
+                    'ip': ip,
+                    'temp': float(temp),
+                    'humidity': float(reh),
+                    'ws': float(ws),
+                    'wd': str(wdKor),
+                    'north_direction': float("0.0"),
+                    'atmospheric_pressure': float("0.0"),
+                    'rainfall': float(pcp),
+                    'voltage': float(ws) * 20,
+                    'weather_ref' : "True"
+                    }
+                    return data
+                except ET.ParseError:
+                    print("응답을 XML 형식으로 파싱할 수 없습니다.")    
+            else:
+                print("API 요청 실패. 상태 코드:", response.status_code)
+                print("응답 내용:", response.text)
+    
 if __name__ == '__main__':
     # initilizing
-    device, ip = initialize() 
-    if device == "No result":
-        # GET 요청 보내기
-        response = requests.get(RSS_url)
+    while True :
+        init_cnt = 0
+        device, ip = initialize() 
+        if device == "No Sensor": #센서가 없을 때는 기상청데이터를 받아온다.
+            while True:
+                try:
+                    data = GivemeWeather()
+                except: 
+                    time.sleep(3)
+                    continue
+                remove_old()
+                write(data)
+                print(data)
+                try:
+                    requests.post(url, headers=headers, json=data, timeout=5)
+                    time.sleep(60)
+                    break
+                except:
+                    print("Destination not Reachable")
+                    time.sleep(10)
 
-        # 응답 상태 코드 확인
-        if response.status_code == 200:
-            try:
-                # XML 파싱
-                root = ET.fromstring(response.content)
-               # 각 item 요소를 순회하며 데이터 추출
-                for item in root.findall('channel/item'):
-                    description = item.find('description').find('body').find('data')
-                    temp = description.find('temp').text # 현재 시간 온도
-                    pcp = description.find('pcp').text # 1시간 예상강수량
-                    ws = description.find('ws').text # 풍속(m/s)
-                    wdKor = description.find('wdKor').text # 풍향한국어 [동, 북, 북동, 북서, 남, 남동, 남서, 서]
-                    reh = description.find('reh').text #습도%
-                data = {
-                'timestamp': int(time.time()),
-                'ip': ip,
-                'temp': float(ret[temp_start:temp_end]),
-                'humidity': float(ret[humidity_start:humidity_end]),
-                'ws': float(ret[ws_start:ws_end]),
-                'wd': int(ret[wd_start:wd_end]),
-                'north_direction': float(ret[north_direction_start:north_direction_end]),
-                'atmospheric_pressure': float(ret[atmospheric_pressure_start:atmospheric_pressure_end]),
-                'rainfall': float(ret[rainfall_start:rainfall_end]),
-                'voltage': float(ret[voltage_start:voltage_end]),
-                'weather_ref' : "False"
-                }
-            except ET.ParseError:
-                print("응답을 XML 형식으로 파싱할 수 없습니다.")
-        else:
-            print("API 요청 실패. 상태 코드:", response.status_code)
-            print("응답 내용:", response.text)
-    else:
-        # start parsing
-        while True:
-            try:
-                data = parse(device, ip)
-            except:
-                time.sleep(3)
-                continue
-            remove_old()
-            write(data)
-            print(data)
-            try:
-                requests.post(url, headers=headers, json=data, timeout=5)
-            except:
-                print("Destination not Reachable")
-                time.sleep(10)
+        else: # 센서가 있다 -> 센서로부터 데이터를 받아온다.
+            # start parsing
+            while init_cnt < 30:
+                init_cnt+=1
+                try:
+                    data = parse(device, ip)
+                except:
+                    time.sleep(3)
+                    continue
+                remove_old()
+                write(data)
+                print(data)
+                try:
+                    requests.post(url, headers=headers, json=data, timeout=5)
+                except:
+                    print("Destination not Reachable")
+                    time.sleep(10)

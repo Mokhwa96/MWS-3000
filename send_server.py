@@ -3,7 +3,7 @@ import pandas as pd
 from urllib.parse import urljoin
 
 SERVER, PORT = '00', 00  # AWS
-DEV_ID = 'dev_03'
+DEV_ID = 'test'
 BASE_URL = f'http://{SERVER}:{PORT}/api/'
 
 def receive_data():
