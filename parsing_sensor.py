@@ -21,9 +21,9 @@ atmospheric_pressure_start, atmospheric_pressure_end = 23, 29
 rainfall_start, rainfall_end = 29, 36
 voltage_start, voltage_end = 36, 40
 
-DEV_ID = 'test'
+DEV_ID = 'dev_03'
 DATA_PATH = f'sensor_data/{DEV_ID}.csv'
-SERVER, PORT = '00', 00 # AWS
+SERVER, PORT = '0000', 0000 # AWS
 url = f'http://{SERVER}:{PORT}/api/{DEV_ID}'
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 RSS_url = "https://www.weather.go.kr/w/rss/dfs/hr1-forecast.do?zone=4617043000"  # 기상청 RSS
@@ -168,7 +168,7 @@ if __name__ == '__main__':
                 print(data)
                 try:
                     requests.post(url, headers=headers, json=data, timeout=5)
-                    time.sleep(60)
+                    time.sleep(600)
                     break
                 except:
                     print("Destination not Reachable")

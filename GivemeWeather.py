@@ -72,14 +72,3 @@ if response.status_code == 200:
 else:
     print("API 요청 실패. 상태 코드:", response.status_code)
     print("응답 내용:", response.text)
-
-#예시
-#{'timestamp': '2024-04-25 07:56:37', 'ip': '192.168.1.1', 'temp': '25.0', 'humidity': '50.0', 'ws': '5.0', 'wd': '180', 'north_direction': '0.0', 'atmospheric_pressure': '1013.25', 'rainfall': '0.0', 'voltage': '12.0', 'wd_kr': '남'}
-# temp : temp, 
-# humidity :reh 
-# ws : ws 
-# wd : wdKor 
-# north_direction : 0.0
-# atmospheric_pressure : "--"
-# rainfall : pcp
-# voltage : ws*2
